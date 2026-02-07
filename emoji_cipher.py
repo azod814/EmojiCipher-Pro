@@ -3,6 +3,7 @@ from tkinter import messagebox, scrolledtext
 import hashlib
 import random
 
+# Emoji Pool
 EMOJIS = [
 "😀","😂","😎","😍","🤯","🥶","😈","🤖","👻","💀",
 "🔥","⚡","🌊","🌪","🌙","☀","⭐","🌈","🍎","🍕",
@@ -57,7 +58,7 @@ def decrypt_message(emoji_text, password):
         return None
 
 
-# ---------------- GUI ---------------- #
+# GUI FUNCTIONS
 
 def convert_message():
     msg = convert_input.get("1.0", tk.END).strip()
@@ -92,117 +93,106 @@ def copy_output():
     if text:
         root.clipboard_clear()
         root.clipboard_append(text)
-        messagebox.showinfo("Copied", "Emoji copied to clipboard!")
+        messagebox.showinfo("Copied", "Emoji copied!")
 
-def clear_convert():
-    convert_input.delete("1.0", tk.END)
-    convert_output.delete("1.0", tk.END)
-
-def clear_resolve():
-    resolve_input.delete("1.0", tk.END)
-    resolve_output.delete("1.0", tk.END)
-
-
-# ---------------- Main Window ---------------- #
+# MAIN WINDOW
 
 root = tk.Tk()
-root.title("🔥 EmojiCipher Pro 🔐")
-root.geometry("850x650")
-root.configure(bg="#111111")
+root.title("🟢 EmojiCipher Pro - Hacker Edition")
+root.geometry("1200x650")
+root.configure(bg="#001a00")
 
-title = tk.Label(root, text="EmojiCipher Pro",
-                 font=("Helvetica", 26, "bold"),
-                 fg="#00ffcc", bg="#111111")
+title = tk.Label(root, text="EMOJICIPHER PRO",
+                 font=("Courier", 28, "bold"),
+                 fg="#00ff00", bg="#001a00")
 title.pack(pady=15)
 
-password_label = tk.Label(root, text="Secret Password",
-                          fg="white", bg="#111111",
-                          font=("Helvetica", 12, "bold"))
+password_label = tk.Label(root, text="ENTER SECRET PASSWORD",
+                          font=("Courier", 12, "bold"),
+                          fg="#00ff00", bg="#001a00")
 password_label.pack()
 
 password_entry = tk.Entry(root, width=40, show="*",
-                          font=("Helvetica", 12))
+                          font=("Courier", 12),
+                          bg="#003300", fg="#00ff00",
+                          insertbackground="#00ff00")
 password_entry.pack(pady=5)
 
 
-# -------- Convert Section -------- #
+# MAIN FRAME (SIDE BY SIDE)
+main_frame = tk.Frame(root, bg="#001a00")
+main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-convert_frame = tk.LabelFrame(root, text=" Convert Message ",
-                              fg="#00ffcc", bg="#1c1c1c",
-                              font=("Helvetica", 12, "bold"),
-                              padx=10, pady=10)
-convert_frame.pack(padx=20, pady=15, fill="both")
 
-convert_input = scrolledtext.ScrolledText(convert_frame,
-                                          height=4,
-                                          font=("Helvetica", 11))
+# LEFT - ENCRYPT
+left_frame = tk.LabelFrame(main_frame,
+                           text=" ENCRYPT MESSAGE ",
+                           font=("Courier", 12, "bold"),
+                           fg="#00ff00", bg="#002200",
+                           padx=10, pady=10)
+left_frame.pack(side="left", expand=True, fill="both", padx=10)
+
+convert_input = scrolledtext.ScrolledText(left_frame,
+                                          height=6,
+                                          font=("Courier", 11),
+                                          bg="#003300",
+                                          fg="#00ff00",
+                                          insertbackground="#00ff00")
 convert_input.pack(pady=5)
 
-convert_btn = tk.Button(convert_frame,
-                        text="Convert 🔥",
+convert_btn = tk.Button(left_frame,
+                        text="ENCRYPT 🔐",
                         command=convert_message,
-                        bg="#00ffcc",
-                        fg="black",
-                        font=("Helvetica", 12, "bold"))
+                        font=("Courier", 12, "bold"),
+                        bg="#00aa00",
+                        fg="black")
 convert_btn.pack(pady=5)
 
-convert_output = scrolledtext.ScrolledText(convert_frame,
-                                           height=4,
-                                           font=("Helvetica", 11))
+convert_output = scrolledtext.ScrolledText(left_frame,
+                                           height=6,
+                                           font=("Courier", 11),
+                                           bg="#003300",
+                                           fg="#00ff00")
 convert_output.pack(pady=5)
 
-button_frame1 = tk.Frame(convert_frame, bg="#1c1c1c")
-button_frame1.pack()
-
-copy_btn = tk.Button(button_frame1, text="Copy 📋",
+copy_btn = tk.Button(left_frame,
+                     text="COPY 📋",
                      command=copy_output,
-                     bg="#ffaa00",
-                     fg="black",
-                     font=("Helvetica", 11, "bold"))
-copy_btn.pack(side="left", padx=5)
-
-clear_btn1 = tk.Button(button_frame1, text="Clear ❌",
-                       command=clear_convert,
-                       bg="#ff4444",
-                       fg="white",
-                       font=("Helvetica", 11, "bold"))
-clear_btn1.pack(side="left", padx=5)
+                     font=("Courier", 11, "bold"),
+                     bg="#009900",
+                     fg="black")
+copy_btn.pack(pady=5)
 
 
-# -------- Resolve Section -------- #
+# RIGHT - DECRYPT
+right_frame = tk.LabelFrame(main_frame,
+                            text=" DECRYPT MESSAGE ",
+                            font=("Courier", 12, "bold"),
+                            fg="#00ff00", bg="#002200",
+                            padx=10, pady=10)
+right_frame.pack(side="right", expand=True, fill="both", padx=10)
 
-resolve_frame = tk.LabelFrame(root, text=" Resolve Message ",
-                              fg="#ff4081", bg="#1c1c1c",
-                              font=("Helvetica", 12, "bold"),
-                              padx=10, pady=10)
-resolve_frame.pack(padx=20, pady=15, fill="both")
-
-resolve_input = scrolledtext.ScrolledText(resolve_frame,
-                                          height=4,
-                                          font=("Helvetica", 11))
+resolve_input = scrolledtext.ScrolledText(right_frame,
+                                          height=6,
+                                          font=("Courier", 11),
+                                          bg="#003300",
+                                          fg="#00ff00",
+                                          insertbackground="#00ff00")
 resolve_input.pack(pady=5)
 
-resolve_btn = tk.Button(resolve_frame,
-                        text="Resolve 🔓",
+resolve_btn = tk.Button(right_frame,
+                        text="DECRYPT 🔓",
                         command=resolve_message,
-                        bg="#ff4081",
-                        fg="white",
-                        font=("Helvetica", 12, "bold"))
+                        font=("Courier", 12, "bold"),
+                        bg="#00aa00",
+                        fg="black")
 resolve_btn.pack(pady=5)
 
-resolve_output = scrolledtext.ScrolledText(resolve_frame,
-                                           height=4,
-                                           font=("Helvetica", 11))
+resolve_output = scrolledtext.ScrolledText(right_frame,
+                                           height=6,
+                                           font=("Courier", 11),
+                                           bg="#003300",
+                                           fg="#00ff00")
 resolve_output.pack(pady=5)
-
-button_frame2 = tk.Frame(resolve_frame, bg="#1c1c1c")
-button_frame2.pack()
-
-clear_btn2 = tk.Button(button_frame2, text="Clear ❌",
-                       command=clear_resolve,
-                       bg="#ff4444",
-                       fg="white",
-                       font=("Helvetica", 11, "bold"))
-clear_btn2.pack()
 
 root.mainloop()
