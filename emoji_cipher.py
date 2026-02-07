@@ -1,11 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
-import base64
 import hashlib
-import os
 import random
-from cryptography.fernet import Fernet
 
+# Large emoji pool (must be more than BASE_CHARS length)
 EMOJIS = [
 "😀","😂","😎","😍","🤯","🥶","😈","🤖","👻","💀",
 "🔥","⚡","🌊","🌪","🌙","☀","⭐","🌈","🍎","🍕",
@@ -17,63 +15,52 @@ EMOJIS = [
 "🐧","🐳","🐬","🐞","🌸","🍀","🍉","🍓","🍔","🥑"
 ]
 
-BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_="
+BASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?@#"
 
-def generate_key(password, salt):
-    key = hashlib.sha256(password.encode() + salt).digest()
-    return base64.urlsafe_b64encode(key)
+# Generate deterministic seed
+def generate_seed(password, salt):
+    return int(hashlib.sha256((password + salt).encode()).hexdigest(), 16)
 
-def get_shuffled_emojis(password, salt):
-    seed = int(hashlib.sha256(password.encode() + salt).hexdigest(), 16)
+# Encrypt
+def encrypt_message(message, password):
+    salt = str(random.randint(1000, 9999))
+    seed = generate_seed(password, salt)
     random.seed(seed)
+
     shuffled = EMOJIS.copy()
     random.shuffle(shuffled)
-    return shuffled
-
-def encrypt_message(message, password):
-    salt = os.urandom(8)
-    key = generate_key(password, salt)
-    f = Fernet(key)
-    encrypted = f.encrypt(message.encode())
-    b64 = base64.urlsafe_b64encode(encrypted).decode()
-
-    shuffled = get_shuffled_emojis(password, salt)
 
     emoji_string = ""
-    for char in b64:
-        emoji_string += shuffled[BASE64_CHARS.index(char)]
+    for char in message:
+        if char in BASE_CHARS:
+            emoji_string += shuffled[BASE_CHARS.index(char)]
+        else:
+            emoji_string += char
 
-    salt_b64 = base64.urlsafe_b64encode(salt).decode()
-    salt_emojis = ""
-    for char in salt_b64:
-        salt_emojis += EMOJIS[BASE64_CHARS.index(char)]
+    return salt + "|" + emoji_string
 
-    return salt_emojis + "|" + emoji_string
-
+# Decrypt
 def decrypt_message(emoji_text, password):
     try:
-        salt_part, emoji_part = emoji_text.split("|")
+        salt, emoji_part = emoji_text.split("|")
+        seed = generate_seed(password, salt)
+        random.seed(seed)
 
-        salt_b64 = ""
-        for e in salt_part:
-            salt_b64 += BASE64_CHARS[EMOJIS.index(e)]
-        salt = base64.urlsafe_b64decode(salt_b64)
+        shuffled = EMOJIS.copy()
+        random.shuffle(shuffled)
 
-        shuffled = get_shuffled_emojis(password, salt)
-
-        encrypted_b64 = ""
+        original = ""
         for e in emoji_part:
-            encrypted_b64 += BASE64_CHARS[shuffled.index(e)]
+            if e in shuffled:
+                original += BASE_CHARS[shuffled.index(e)]
+            else:
+                original += e
 
-        encrypted = base64.urlsafe_b64decode(encrypted_b64)
-
-        key = generate_key(password, salt)
-        f = Fernet(key)
-        return f.decrypt(encrypted).decode()
-
+        return original
     except:
         return None
 
+# GUI Functions
 def convert_message():
     msg = input_box.get("1.0", tk.END).strip()
     pwd = password_entry.get().strip()
@@ -96,45 +83,59 @@ def resolve_message():
 
     result = decrypt_message(msg, pwd)
 
-    if result:
+    if result is not None:
         input_box.delete("1.0", tk.END)
         input_box.insert(tk.END, result)
     else:
         messagebox.showerror("Error", "Wrong password or corrupted emoji!")
 
+# GUI Design
 root = tk.Tk()
 root.title("EmojiCipher Pro 🔐")
 root.geometry("700x550")
 root.configure(bg="#1e1e1e")
 
-title = tk.Label(root, text="EmojiCipher Pro", font=("Helvetica", 24, "bold"), fg="#00ffcc", bg="#1e1e1e")
+title = tk.Label(root, text="EmojiCipher Pro", font=("Helvetica", 24, "bold"),
+                 fg="#00ffcc", bg="#1e1e1e")
 title.pack(pady=10)
 
-password_label = tk.Label(root, text="Secret Password:", fg="white", bg="#1e1e1e", font=("Helvetica", 12, "bold"))
+password_label = tk.Label(root, text="Secret Password:",
+                          fg="white", bg="#1e1e1e",
+                          font=("Helvetica", 12, "bold"))
 password_label.pack()
 
 password_entry = tk.Entry(root, width=40, show="*", font=("Helvetica", 12))
 password_entry.pack(pady=5)
 
-input_label = tk.Label(root, text="Enter Message:", fg="white", bg="#1e1e1e", font=("Helvetica", 12, "bold"))
+input_label = tk.Label(root, text="Enter Message:",
+                       fg="white", bg="#1e1e1e",
+                       font=("Helvetica", 12, "bold"))
 input_label.pack()
 
-input_box = scrolledtext.ScrolledText(root, height=5, width=70, font=("Helvetica", 11))
+input_box = scrolledtext.ScrolledText(root, height=5, width=70,
+                                      font=("Helvetica", 11))
 input_box.pack(pady=5)
 
-convert_btn = tk.Button(root, text="Convert to Emoji 🔥", command=convert_message,
-                        bg="#00ffcc", fg="black", font=("Helvetica", 12, "bold"))
+convert_btn = tk.Button(root, text="Convert to Emoji 🔥",
+                        command=convert_message,
+                        bg="#00ffcc", fg="black",
+                        font=("Helvetica", 12, "bold"))
 convert_btn.pack(pady=10)
 
-output_label = tk.Label(root, text="Emoji Output / Paste to Resolve:",
-                        fg="white", bg="#1e1e1e", font=("Helvetica", 12, "bold"))
+output_label = tk.Label(root,
+                        text="Emoji Output / Paste to Resolve:",
+                        fg="white", bg="#1e1e1e",
+                        font=("Helvetica", 12, "bold"))
 output_label.pack()
 
-output_box = scrolledtext.ScrolledText(root, height=6, width=70, font=("Helvetica", 11))
+output_box = scrolledtext.ScrolledText(root, height=6, width=70,
+                                       font=("Helvetica", 11))
 output_box.pack(pady=5)
 
-resolve_btn = tk.Button(root, text="Resolve Message 🔓", command=resolve_message,
-                        bg="#ff4081", fg="white", font=("Helvetica", 12, "bold"))
+resolve_btn = tk.Button(root, text="Resolve Message 🔓",
+                        command=resolve_message,
+                        bg="#ff4081", fg="white",
+                        font=("Helvetica", 12, "bold"))
 resolve_btn.pack(pady=10)
 
 root.mainloop()
